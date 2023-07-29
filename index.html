@@ -1,1 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>A Feasot for Odin score calculator</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="A score calculator for the board game A Feast for Odin, including scoring for one to four players">
+		<link rel="shortcut icon" href="/images/favicon.ico">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap" rel="stylesheet">
+		<style>
+			:root {
+				--main-color: #444B53;
+			}
+			* { font-family: 'Open Sans', sans-serif; font-weight: 600; color: var(--main-color); box-sizing: border-box; }
+			body { background-color: #F6F6F6; margin: 0; padding: 40px 0; position: relative; }
+			.wrap { max-width: 400px; padding: 0 20px; margin: 0 auto; }
+			.hide { text-indent: -99em; position: absolute; left: -9999px; width: 0; height: 0; }
+			.visually-hidden { visibility: hidden; }
+			.rows {padding: 0;}
+			.group-label { font-size: 16px; margin: 0; padding: 5px 10px; background-color: #DDD; }
+			.row-label { font-size: 15px; width: 120px; margin: 13px 0; }
+			.no-margin-top { margin-top: 0; }
+			.counter, .initials, .score, .total-score { font-size: 32px; }
+			h1, .rows label { text-indent: -99em; position: absolute; width: 0; height: 0; }
+			button { background: none; width: 40px; height: 40px; font-size: 24px; border: none; cursor: pointer; line-height: 38px; }
+			.row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+			.row.end { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--main-color); }
+			.spaced-bottom { margin-bottom: 20px; }
+			.counter, .initials { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+			.initials input[type="text"] { text-transform: uppercase; }
+			input[type="number"], input[type="text"] { display: block; width: 40px; height: 40px; line-height: 38px; padding: 0; border: 1px solid #333; text-align: center; -moz-appearance: textfield; font-size: 18px; }
+			.input { position: relative; }
+			input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+			.total-scores { cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+			.total-scores .row-label {visibility: hidden;}
+			.total-score { width: 120px; text-align: center;}
+			.players { border: 0; padding: 0; font-size: 14px; margin: 0; }
+			.players legend { position: absolute; top: -999px; }
+			.players ul { overflow: hidden; position: relative; display: block; list-style: none; margin: 0 0 40px; padding: 0; display: flex; flex-direction: row; align-items: center; justify-content: space-evenly; }
+			.players li { width: 50%; }
+			.players label { border: 1px solid #DDD; display: block; background: #FFF; color: #999; padding: 6px 10px; margin-bottom: 5px; cursor: pointer; transition: .2s background; position: relative; text-align: center; }
+			.players span { color: #999; }
+			.players li:first-child label { border-radius: 4px 0 0 4px; border-right-color: #FFF; }
+			.players li:last-child label { border-radius: 0 4px 4px 0; }
+			.players li:nth-child(2) label, .players li:nth-child(3) label { border-right-color: #FFF; }
+			input[type="radio"] { opacity: 0; position: absolute; }
+			.players li input[type="radio"]:checked + label { border: 1px solid var(--main-color); background: #EEE; color: var(--main-color); }
+			.players li input[type="radio"]:checked + label span { color: var(--main-color); }
+			label { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+			body[data-players="1"] .player-multi { display: none; }
+			body[data-players="2"] .initials { margin: 0 40px; }
+			body[data-players="3"] .counter button, body[data-players="4"] .counter button, body[data-players="5"] .counter button {display: none;}
+			body[data-players="1"] .player-2, body[data-players="1"] .player-3, body[data-players="1"] .player-4, body[data-players="1"] .player-5 { display: none; }
+			body[data-players="2"] .player-3, body[data-players="2"] .player-4, body[data-players="2"] .player-5 { display: none; }
+			body[data-players="3"] .player-4, body[data-players="3"] .player-5 { display: none; }
+			body[data-players="4"] .player-5 { display: none; }
+			body[data-players="3"] .total-score, body[data-players="4"] .total-score, body[data-players="5"] .total-score { width: 40px; font-size: 24px; }
+			input[disabled] { background-color: #DDD; border-color: #DDD; }
+			.feedback { margin: 40px 0 0; text-align: center; font-size: 14px; }
+			.feedback a { color: #999; }
+		</style>
+	</head>
 
+	<body data-players="1">
+		<div class="wrap">
+		<h1>A Feast for Odin score calculator</h1>
+
+		<fieldset class="players">
+		<legend>Players</legend>
+		<ul>
+			<li>
+				<input type="radio" name="player" id="players-1" value="1" class="js-player-switch" checked tabindex="1">
+				<label for="players-1">1</label>
+			</li>
+			<li>
+				<input type="radio" name="player" id="players-2" value="2" class="js-player-switch" tabindex="2">
+				<label for="players-2">2</label>
+			</li>
+			<li>
+				<input type="radio" name="player" id="players-3" value="3" class="js-player-switch" tabindex="3">
+				<label for="players-3">3</label>
+			</li>
+			<li>
+				<input type="radio" name="player" id="players-4" value="4" class="js-player-switch" tabindex="4">
+				<label for="players-4">4</label>
+			</li>
+		</ul>
+		</fieldset>
+
+
+		<div class="player-multi">
+			<h2 class="group-label hide">Player initials</h2>
+			<ul class="rows no-margin-top">
+				<li class="row">
+					<div class="row-label">Player</div>
+					<div class="initials player-1">
+						<label for="player-1-initials">Player 1 initials</label>
+						<input id="player-1-initials" type="text" value="" maxlength="2">
+					</div>
+					<div class="initials player-2">
+						<label for="player-2-initials">Player 2 initials</label>
+						<input id="player-2-initials" type="text" value="" maxlength="2">
+					</div>
+					<div class="initials player-3">
+						<label for="player-3-initials">Player 3 initials</label>
+						<input id="player-3-initials" type="text" value="" maxlength="2">
+					</div>
+					<div class="initials player-4">
+						<label for="player-4-initials">Player 4 initials</label>
+						<input id="player-4-initials" type="text" value="" maxlength="2">
+					</div>
+				</li>
+			</ul>
+		</div>
+		<h2 class="group-label">Positive points</h2>
+		<ul class="rows">
+			<li class="row js-row">
+				<h3 class="row-label">Ships</h3>
+				<div class="counter player-1">
+					<label for="player-1-ships">Player 1</label>
+					<button class="js-decrement" data-row="1" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-ships" type="number" min="0" class="js-score" data-type="positive" data-row="1" data-player="1" value="0">
+					<button class="js-increment" data-row="1" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-ships">Player 2</label>
+					<button class="js-decrement" data-row="1" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-ships" type="number" min="0" class="js-score" data-type="positive" data-row="1" data-player="2" value="0">
+					<button class="js-increment" data-row="1" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-ships">Player 3</label>
+					<button class="js-decrement" data-row="1" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-ships" type="number" min="0" class="js-score" data-type="positive" data-row="1" data-player="3" value="0">
+					<button class="js-increment" data-row="1" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-ships">Player 4</label>
+					<button class="js-decrement" data-row="1" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-ships" type="number" min="0" class="js-score" data-type="positive" data-row="1" data-player="4" value="0">
+					<button class="js-increment" data-row="1" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Emigrations</h3>
+				<div class="counter player-1">
+					<label for="player-1-emigrations">Player 1</label>
+					<button class="js-decrement" data-row="2" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-emigrations" type="number" min="0" class="js-score" data-type="positive" data-row="2" data-player="1" value="0">
+					<button class="js-increment" data-row="2" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-emigrations">Player 2</label>
+					<button class="js-decrement" data-row="2" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-emigrations" type="number" min="0" class="js-score" data-type="positive" data-row="2" data-player="2" value="0">
+					<button class="js-increment" data-row="2" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-emigrations">Player 3</label>
+					<button class="js-decrement" data-row="2" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-emigrations" type="number" min="0" class="js-score" data-type="positive" data-row="2" data-player="3" value="0">
+					<button class="js-increment" data-row="2" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-emigrations">Player 4</label>
+					<button class="js-decrement" data-row="2" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-emigrations" type="number" min="0" class="js-score" data-type="positive" data-row="2" data-player="4" value="0">
+					<button class="js-increment" data-row="2" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Explor'n boards</h3>
+				<div class="counter player-1">
+					<label for="player-1-boards">Player 1</label>
+					<button class="js-decrement" data-row="3" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-boards" type="number" min="0" class="js-score" data-type="positive" data-row="3" data-player="1" value="0">
+					<button class="js-increment" data-row="3" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-boards">Player 2</label>
+					<button class="js-decrement" data-row="3" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-boards" type="number" min="0" class="js-score" data-type="positive" data-row="3" data-player="2" value="0">
+					<button class="js-increment" data-row="3" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-boards">Player 3</label>
+					<button class="js-decrement" data-row="3" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-boards" type="number" min="0" class="js-score" data-type="positive" data-row="3" data-player="3" value="0">
+					<button class="js-increment" data-row="3" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-boards">Player 4</label>
+					<button class="js-decrement" data-row="3" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-boards" type="number" min="0" class="js-score" data-type="positive" data-row="3" data-player="4" value="0">
+					<button class="js-increment" data-row="3" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Sheds & houses</h3>
+				<div class="counter player-1">
+					<label for="player-1-sheds-houses">Player 1</label>
+					<button class="js-decrement" data-row="4" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-sheds-houses" type="number" min="0" class="js-score" data-type="positive" data-row="4" data-player="1" value="0">
+					<button class="js-increment" data-row="4" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-sheds-houses">Player 2</label>
+					<button class="js-decrement" data-row="4" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-sheds-houses" type="number" min="0" class="js-score" data-type="positive" data-row="4" data-player="2" value="0">
+					<button class="js-increment" data-row="4" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-sheds-houses">Player 3</label>
+					<button class="js-decrement" data-row="4" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-sheds-houses" type="number" min="0" class="js-score" data-type="positive" data-row="4" data-player="3" value="0">
+					<button class="js-increment" data-row="4" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-sheds-houses">Player 4</label>
+					<button class="js-decrement" data-row="4" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-sheds-houses" type="number" min="0" class="js-score" data-type="positive" data-row="4" data-player="4" value="0">
+					<button class="js-increment" data-row="4" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Sheep & cattle</h3>
+				<div class="counter">
+					<label for="player-1-sheep-cattle">Player 1</label>
+					<button class="js-decrement" data-row="5" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-sheep-cattle" type="number" min="0" class="js-score" data-type="positive" data-row="5" data-player="1" value="0">
+					<button class="js-increment" data-row="5" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-sheep-cattle">Player 2</label>
+					<button class="js-decrement" data-row="5" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-sheep-cattle" type="number" min="0" class="js-score" data-type="positive" data-row="5" data-player="2" value="0">
+					<button class="js-increment" data-row="5" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-sheep-cattle">Player 3</label>
+					<button class="js-decrement" data-row="5" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-sheep-cattle" type="number" min="0" class="js-score" data-type="positive" data-row="5" data-player="3" value="0">
+					<button class="js-increment" data-row="5" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-sheep-cattle">Player 4</label>
+					<button class="js-decrement" data-row="5" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-sheep-cattle" type="number" min="0" class="js-score" data-type="positive" data-row="5" data-player="4" value="0">
+					<button class="js-increment" data-row="5" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Occupations</h3>
+				<div class="counter">
+					<label for="player-1-occupations">Player 1</label>
+					<button class="js-decrement" data-row="6" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-occupations" type="number" min="0" class="js-score" data-type="positive" data-row="6" data-player="1" value="0">
+					<button class="js-increment" data-row="6" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-occupations">Player 2</label>
+					<button class="js-decrement" data-row="6" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-occupations" type="number" min="0" class="js-score" data-type="positive" data-row="6" data-player="2" value="0">
+					<button class="js-increment" data-row="6" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-occupations">Player 3</label>
+					<button class="js-decrement" data-row="6" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-occupations" type="number" min="0" class="js-score" data-type="positive" data-row="6" data-player="3" value="0">
+					<button class="js-increment" data-row="6" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-occupations">Player 4</label>
+					<button class="js-decrement" data-row="6" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-occupations" type="number" min="0" class="js-score" data-type="positive" data-row="6" data-player="4" value="0">
+					<button class="js-increment" data-row="6" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Silver</h3>
+				<div class="counter player-1">
+					<label for="player-1-silver">Player 1</label>
+					<button class="js-decrement" data-row="7" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-silver" type="number" min="0" class="js-score" data-type="positive" data-row="7" data-player="1" value="0">
+					<button class="js-increment" data-row="7" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-silver">Player 2</label>
+					<button class="js-decrement" data-row="7" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-silver" type="number" min="0" class="js-score" data-type="positive" data-row="7" data-player="2" value="0">
+					<button class="js-increment" data-row="7" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-silver">Player 3</label>
+					<button class="js-decrement" data-row="7" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-silver" type="number" min="0" class="js-score" data-type="positive" data-row="7" data-player="3" value="0">
+					<button class="js-increment" data-row="7" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-silver">Player 4</label>
+					<button class="js-decrement" data-row="7" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-silver" type="number" min="0" class="js-score" data-type="positive" data-row="7" data-player="4" value="0">
+					<button class="js-increment" data-row="7" data-player="4" tabindex="-1">+</button>
+				</div>
+		 	</li>
+			<li class="row js-row">
+				<h3 class="row-label">Final income</h3>
+				<div class="counter">
+					<label for="player-1-income">Player 1</label>
+					<button class="js-decrement" data-row="8" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-income" type="number" min="0" class="js-score" data-type="positive" data-row="8" data-player="1" value="0">
+					<button class="js-increment" data-row="8" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-income">Player 2</label>
+					<button class="js-decrement" data-row="8" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-income" type="number" min="0" class="js-score" data-type="positive" data-row="8" data-player="2" value="0">
+					<button class="js-increment" data-row="8" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-income">Player 3</label>
+					<button class="js-decrement" data-row="8" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-income" type="number" min="0" class="js-score" data-type="positive" data-row="8" data-player="3" value="0">
+					<button class="js-increment" data-row="8" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-income">Player 4</label>
+					<button class="js-decrement" data-row="8" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-income" type="number" min="0" class="js-score" data-type="positive" data-row="8" data-player="4" value="0">
+					<button class="js-increment" data-row="8" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row end js-row">
+				<h3 class="row-label player-1">English crown</h3>
+				<div class="counter">
+					<label for="player-1-crowns">Player 1</label>
+					<button class="js-decrement" data-row="9" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-crowns" type="number" min="0" class="js-score" data-type="positive" data-row="9" data-player="1" value="0">
+					<button class="js-increment" data-row="9" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-crowns">Player 2</label>
+					<button class="js-decrement" data-row="9" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-crowns" type="number" min="0" class="js-score" data-type="positive" data-row="9" data-player="2" value="0">
+					<button class="js-increment" data-row="9" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-crowns">Player 3</label>
+					<button class="js-decrement" data-row="9" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-crowns" type="number" min="0" class="js-score" data-type="positive" data-row="9" data-player="3" value="0">
+					<button class="js-increment" data-row="9" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-crowns">Player 4</label>
+					<button class="js-decrement" data-row="9" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-crowns" type="number" min="0" class="js-score" data-type="positive" data-row="9" data-player="4" value="0">
+					<button class="js-increment" data-row="9" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+		</ul>
+		<div class="total-scores spaced-bottom js-positive-subtotal-scores">
+			<h3 class="row-label">Positive totals</h3>
+			<div class="total-score player-1 js-positive-subtotal-score-player-1">0</div>
+			<div class="total-score player-2 js-positive-subtotal-score-player-2">0</div>
+			<div class="total-score player-3 js-positive-subtotal-score-player-3">0</div>
+			<div class="total-score player-4 js-positive-subtotal-score-player-4">0</div>
+		</div>
+		<h2 class="group-label">Negative points</h2>
+		<ul class="rows">
+			<li class="row js-row">
+				<h3 class="row-label">Home board</h3>
+				<div class="counter player-1">
+					<label for="player-1-neg-home">Player 1</label>
+					<button class="js-decrement" data-row="10" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-neg-home" type="number" min="0" class="js-score" data-type="negative" data-row="10" data-player="1" value="0">
+					<button class="js-increment" data-row="10" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-neg-home">Player 2</label>
+					<button class="js-decrement" data-row="10" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-neg-home" type="number" min="0" class="js-score" data-type="negative" data-row="10" data-player="2" value="0">
+					<button class="js-increment" data-row="10" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-neg-home">Player 3</label>
+					<button class="js-decrement" data-row="10" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-neg-home" type="number" min="0" class="js-score" data-type="negative" data-row="10" data-player="3" value="0">
+					<button class="js-increment" data-row="10" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-neg-home">Player 4</label>
+					<button class="js-decrement" data-row="10" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-neg-home" type="number" min="0" class="js-score" data-type="negative" data-row="10" data-player="4" value="0">
+					<button class="js-increment" data-row="10" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Explor'n boards</h3>
+				<div class="counter player-1">
+					<label for="player-1-neg-boards">Player 1</label>
+					<button class="js-decrement" data-row="11" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-neg-boards" type="number" min="0" class="js-score" data-type="negative" data-row="11" data-player="1" value="0">
+					<button class="js-increment" data-row="11" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-neg-boards">Player 2</label>
+					<button class="js-decrement" data-row="11" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-neg-boards" type="number" min="0" class="js-score" data-type="negative" data-row="11" data-player="2" value="0">
+					<button class="js-increment" data-row="11" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-neg-boards">Player 3</label>
+					<button class="js-decrement" data-row="11" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-neg-boards" type="number" min="0" class="js-score" data-type="negative" data-row="11" data-player="3" value="0">
+					<button class="js-increment" data-row="11" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-neg-boards">Player 4</label>
+					<button class="js-decrement" data-row="11" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-neg-boards" type="number" min="0" class="js-score" data-type="negative" data-row="11" data-player="4" value="0">
+					<button class="js-increment" data-row="11" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Sheds & houses</h3>
+				<div class="counter player-1">
+					<label for="player-1-neg-sheds-houses">Player 1</label>
+					<button class="js-decrement" data-row="12" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-neg-sheds-houses" type="number" min="0" class="js-score" data-type="negative" data-row="12" data-player="1" value="0">
+					<button class="js-increment" data-row="12" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-neg-sheds-houses">Player 2</label>
+					<button class="js-decrement" data-row="12" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-neg-sheds-houses" type="number" min="0" class="js-score" data-type="negative" data-row="12" data-player="2" value="0">
+					<button class="js-increment" data-row="12" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-neg-sheds-houses">Player 3</label>
+					<button class="js-decrement" data-row="12" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-neg-sheds-houses" type="number" min="0" class="js-score" data-type="negative" data-row="12" data-player="3" value="0">
+					<button class="js-increment" data-row="12" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-neg-sheds-houses">Player 4</label>
+					<button class="js-decrement" data-row="12" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-neg-sheds-houses" type="number" min="0" class="js-score" data-type="negative" data-row="12" data-player="4" value="0">
+					<button class="js-increment" data-row="12" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+			<li class="row js-row">
+				<h3 class="row-label">Thing penalty</h3>
+				<div class="counter player-1">
+					<label for="player-1-neg-thing">Player 1</label>
+					<button class="js-decrement" data-row="13" data-player="1" tabindex="-1">&ndash;</button>
+					<input id="player-1-neg-thing" type="number" min="0" class="js-score" data-type="negative" data-row="13" data-player="1" value="0">
+					<button class="js-increment" data-row="13" data-player="1" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-2">
+					<label for="player-2-neg-thing">Player 2</label>
+					<button class="js-decrement" data-row="13" data-player="2" tabindex="-1">&ndash;</button>
+					<input id="player-2-neg-thing" type="number" min="0" class="js-score" data-type="negative" data-row="13" data-player="2" value="0">
+					<button class="js-increment" data-row="13" data-player="2" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-3">
+					<label for="player-3-neg-thing">Player 3</label>
+					<button class="js-decrement" data-row="13" data-player="3" tabindex="-1">&ndash;</button>
+					<input id="player-3-neg-thing" type="number" min="0" class="js-score" data-type="negative" data-row="13" data-player="3" value="0">
+					<button class="js-increment" data-row="13" data-player="3" tabindex="-1">+</button>
+				</div>
+				<div class="counter player-4">
+					<label for="player-4-neg-thing">Player 4</label>
+					<button class="js-decrement" data-row="13" data-player="4" tabindex="-1">&ndash;</button>
+					<input id="player-4-neg-thing" type="number" min="0" class="js-score" data-type="negative" data-row="13" data-player="4" value="0">
+					<button class="js-increment" data-row="13" data-player="4" tabindex="-1">+</button>
+				</div>
+			</li>
+		</ul>
+		<div class="total-scores spaced-bottom js-negative-subtotal-scores">
+			<h3 class="row-label">Negative totals</h3>
+			<div class="total-score player-1 js-negative-subtotal-score-player-1">0</div>
+			<div class="total-score player-2 js-negative-subtotal-score-player-2">0</div>
+			<div class="total-score player-3 js-negative-subtotal-score-player-3">0</div>
+			<div class="total-score player-4 js-negative-subtotal-score-player-4">0</div>
+		</div>
+		<h2 class="group-label spaced-bottom">Total points</h2>
+		<div class="total-scores js-total-scores">
+			<div class="row-label"></div>
+			<div class="total-score player-1 js-total-score-player-1">0</div>
+			<div class="total-score player-2 js-total-score-player-2">0</div>
+			<div class="total-score player-3 js-total-score-player-3">0</div>
+			<div class="total-score player-4 js-total-score-player-4">0</div>
+		</div>
+		<p class="feedback"><a href="https://ronansprake.co.uk/board-game-score-calculators#contact" target="_blank">Could this be better? Send me feedback</a></p>
+		</div>
+
+		<script>
+			const body = document.querySelector("body");
+			const players = document.querySelectorAll(".js-player-switch");
+
+			const elemScores = document.querySelectorAll(".js-score");
+
+			const elemPositiveScoresPlayer1 = document.querySelectorAll(".js-score[data-player='1'][data-type='positive']");
+			const elemNegativeScoresPlayer1 = document.querySelectorAll(".js-score[data-player='1'][data-type='negative']");
+			const elemNegativeSubtotalScorePlayer1 = document.querySelector('.js-negative-subtotal-score-player-1');
+			const elemPositiveSubtotalScorePlayer1 = document.querySelector('.js-positive-subtotal-score-player-1');
+			const elemTotalScorePlayer1 = document.querySelector('.js-total-score-player-1');
+
+			const elemPositiveScoresPlayer2 = document.querySelectorAll(".js-score[data-player='2'][data-type='positive']");
+			const elemNegativeScoresPlayer2 = document.querySelectorAll(".js-score[data-player='2'][data-type='negative']");
+			const elemNegativeSubtotalScorePlayer2 = document.querySelector('.js-negative-subtotal-score-player-2');
+			const elemPositiveSubtotalScorePlayer2 = document.querySelector('.js-positive-subtotal-score-player-2');
+			const elemTotalScorePlayer2 = document.querySelector('.js-total-score-player-2');
+
+			const elemPositiveScoresPlayer3 = document.querySelectorAll(".js-score[data-player='3'][data-type='positive']");
+			const elemNegativeScoresPlayer3 = document.querySelectorAll(".js-score[data-player='3'][data-type='negative']");
+			const elemNegativeSubtotalScorePlayer3 = document.querySelector('.js-negative-subtotal-score-player-3');
+			const elemPositiveSubtotalScorePlayer3 = document.querySelector('.js-positive-subtotal-score-player-3');
+			const elemTotalScorePlayer3 = document.querySelector('.js-total-score-player-3');
+
+			const elemPositiveScoresPlayer4 = document.querySelectorAll(".js-score[data-player='4'][data-type='positive']");
+			const elemNegativeScoresPlayer4 = document.querySelectorAll(".js-score[data-player='4'][data-type='negative']");
+			const elemNegativeSubtotalScorePlayer4 = document.querySelector('.js-negative-subtotal-score-player-4');
+			const elemPositiveSubtotalScorePlayer4 = document.querySelector('.js-positive-subtotal-score-player-4');
+			const elemTotalScorePlayer4 = document.querySelector('.js-total-score-player-4');
+
+			const elemIncrements = document.querySelectorAll('.js-increment');
+			const elemDecrements = document.querySelectorAll('.js-decrement');
+
+			document.oncontextmenu = function() {
+				return false;
+			}
+
+			// Switch player
+			players.forEach((player) => {
+				player.addEventListener('change', (e) => {
+					if (player.checked) {
+						body.dataset.players = player.value;
+					}
+					// Reset scores on change of player count
+					// elemScores.forEach((elemScore) => {
+					// 	elemScore.value = 0;
+					// });
+					updateTotalScore();
+				});
+			});
+
+			elemScores.forEach((elemScore) => {
+				elemScore.addEventListener('change', (e) => {
+					if (!elemScore.value) {
+						elemScore.value = 0;
+					}
+					updateTotalScore();
+				});
+				elemScore.addEventListener('focus', (e) => {
+				elemScore.select();
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				});
+				elemScore.addEventListener('contextmenu', (e) => {
+					e.preventDefault();
+				});
+			});
+
+			// Update a score
+			function updateRowScore(row, player, direction) {
+				var scoreInput = document.querySelector(".js-score[data-row='" + row + "'][data-player='" + player + "']");
+				if (!scoreInput.disabled) {
+					if (direction == 'decrement' && scoreInput.value > 0) {
+						scoreInput.value = parseInt(scoreInput.value) - 1
+					}
+					if (direction == 'increment') {
+						scoreInput.value = parseInt(scoreInput.value) + 1
+					}
+				}
+				scoreInput.dispatchEvent(new Event('change'));
+				updateTotalScore();
+			}
+
+			// Increment score
+			elemIncrements.forEach((elemIncrement) => {
+				elemIncrement.addEventListener('click', (e) => {
+				updateRowScore(elemIncrement.dataset.row, elemIncrement.dataset.player, 'increment');
+				});
+			});
+
+			// Decrement score
+			elemDecrements.forEach((elemDecrement) => {
+				elemDecrement.addEventListener('click', (e) => {
+				updateRowScore(elemDecrement.dataset.row, elemDecrement.dataset.player, 'decrement');
+				});
+			});
+
+			// Update the total scores with all subtotals
+			function updateTotalScore() {
+				var positiveScorePlayer1 = 0;
+				var negativeScorePlayer1 = 0;
+				var positiveScorePlayer2 = 0;
+				var negativeScorePlayer2 = 0;
+				var positiveScorePlayer3 = 0;
+				var negativeScorePlayer3 = 0;
+				var positiveScorePlayer4 = 0;
+				var negativeScorePlayer4 = 0;
+				elemPositiveScoresPlayer1.forEach((elemPositiveScoresPlayer1) => {
+					positiveScorePlayer1 += parseInt(elemPositiveScoresPlayer1.value);
+				});
+				elemNegativeScoresPlayer1.forEach((elemNegativeScoresPlayer1) => {
+					negativeScorePlayer1 -= parseInt(elemNegativeScoresPlayer1.value);
+				});
+				elemPositiveScoresPlayer2.forEach((elemPositiveScoresPlayer2) => {
+					positiveScorePlayer2 += parseInt(elemPositiveScoresPlayer2.value);
+				});
+				elemNegativeScoresPlayer2.forEach((elemNegativeScoresPlayer2) => {
+					negativeScorePlayer2 -= parseInt(elemNegativeScoresPlayer2.value);
+				});
+				elemPositiveScoresPlayer3.forEach((elemPositiveScoresPlayer3) => {
+					positiveScorePlayer3 += parseInt(elemPositiveScoresPlayer3.value);
+				});
+				elemNegativeScoresPlayer3.forEach((elemNegativeScoresPlayer3) => {
+					negativeScorePlayer3 -= parseInt(elemNegativeScoresPlayer3.value);
+				});
+				elemPositiveScoresPlayer4.forEach((elemPositiveScoresPlayer4) => {
+					positiveScorePlayer4 += parseInt(elemPositiveScoresPlayer4.value);
+				});
+				elemNegativeScoresPlayer4.forEach((elemNegativeScoresPlayer4) => {
+					negativeScorePlayer4 -= parseInt(elemNegativeScoresPlayer4.value);
+				});
+				elemNegativeSubtotalScorePlayer1.innerHTML = negativeScorePlayer1;
+				elemPositiveSubtotalScorePlayer1.innerHTML = positiveScorePlayer1;
+				elemTotalScorePlayer1.innerHTML = negativeScorePlayer1 + positiveScorePlayer1;
+				elemNegativeSubtotalScorePlayer2.innerHTML = negativeScorePlayer2;
+				elemPositiveSubtotalScorePlayer2.innerHTML = positiveScorePlayer2;
+				elemTotalScorePlayer2.innerHTML = negativeScorePlayer2 + positiveScorePlayer2;
+				elemNegativeSubtotalScorePlayer3.innerHTML = negativeScorePlayer3;
+				elemPositiveSubtotalScorePlayer3.innerHTML = positiveScorePlayer3;
+				elemTotalScorePlayer3.innerHTML = negativeScorePlayer3 + positiveScorePlayer3;
+				elemNegativeSubtotalScorePlayer4.innerHTML = negativeScorePlayer4;
+				elemPositiveSubtotalScorePlayer4.innerHTML = positiveScorePlayer4;
+				elemTotalScorePlayer4.innerHTML = negativeScorePlayer4 + positiveScorePlayer4;
+			}
+
+			// Reset all scores
+			document.querySelector('.js-total-scores').addEventListener('click', (e) => {
+				var result = window.confirm('Reset your score?');
+				if (result == true) {
+					// Reset scores
+					elemScores.forEach((elemScore) => {
+						elemScore.value = 0;
+					});
+					updateTotalScore();
+				}
+				e.stopPropagation();
+			});
+		</script>
+	</body>
+</html>
