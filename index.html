@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>A Feasot for Odin score calculator</title>
+		<title>A Feast for Odin score calculator</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content="A score calculator for the board game A Feast for Odin, including scoring for one to four players">
 		<link rel="shortcut icon" href="/images/favicon.ico">
@@ -502,29 +502,20 @@
 
 			const elemScores = document.querySelectorAll(".js-score");
 
-			const elemPositiveScoresPlayer1 = document.querySelectorAll(".js-score[data-player='1'][data-type='positive']");
-			const elemNegativeScoresPlayer1 = document.querySelectorAll(".js-score[data-player='1'][data-type='negative']");
-			const elemNegativeSubtotalScorePlayer1 = document.querySelector('.js-negative-subtotal-score-player-1');
-			const elemPositiveSubtotalScorePlayer1 = document.querySelector('.js-positive-subtotal-score-player-1');
-			const elemTotalScorePlayer1 = document.querySelector('.js-total-score-player-1');
+			let elemPositiveScores = new Array();
+			let elemNegativeScores = new Array();
+			let elemNegativeSubtotal = new Array();
+			let elemPositiveSubtotal = new Array();
+			let elemTotalScore = new Array();
 
-			const elemPositiveScoresPlayer2 = document.querySelectorAll(".js-score[data-player='2'][data-type='positive']");
-			const elemNegativeScoresPlayer2 = document.querySelectorAll(".js-score[data-player='2'][data-type='negative']");
-			const elemNegativeSubtotalScorePlayer2 = document.querySelector('.js-negative-subtotal-score-player-2');
-			const elemPositiveSubtotalScorePlayer2 = document.querySelector('.js-positive-subtotal-score-player-2');
-			const elemTotalScorePlayer2 = document.querySelector('.js-total-score-player-2');
 
-			const elemPositiveScoresPlayer3 = document.querySelectorAll(".js-score[data-player='3'][data-type='positive']");
-			const elemNegativeScoresPlayer3 = document.querySelectorAll(".js-score[data-player='3'][data-type='negative']");
-			const elemNegativeSubtotalScorePlayer3 = document.querySelector('.js-negative-subtotal-score-player-3');
-			const elemPositiveSubtotalScorePlayer3 = document.querySelector('.js-positive-subtotal-score-player-3');
-			const elemTotalScorePlayer3 = document.querySelector('.js-total-score-player-3');
-
-			const elemPositiveScoresPlayer4 = document.querySelectorAll(".js-score[data-player='4'][data-type='positive']");
-			const elemNegativeScoresPlayer4 = document.querySelectorAll(".js-score[data-player='4'][data-type='negative']");
-			const elemNegativeSubtotalScorePlayer4 = document.querySelector('.js-negative-subtotal-score-player-4');
-			const elemPositiveSubtotalScorePlayer4 = document.querySelector('.js-positive-subtotal-score-player-4');
-			const elemTotalScorePlayer4 = document.querySelector('.js-total-score-player-4');
+			for (let i = 1; i < 5; i++) {
+				elemPositiveScores[i] = document.querySelectorAll(".js-score[data-player='" + i +"'][data-type='positive']");
+				elemNegativeScores[i] = document.querySelectorAll(".js-score[data-player='" + i +"'][data-type='negative']");
+				elemPositiveSubtotal[i] = document.querySelector(".js-positive-subtotal-score-player-" + i);
+				elemNegativeSubtotal[i] = document.querySelector(".js-negative-subtotal-score-player-" + i);
+				elemTotalScore[i] = document.querySelector(".js-total-score-player-" + i);
+			}
 
 			const elemIncrements = document.querySelectorAll('.js-increment');
 			const elemDecrements = document.querySelectorAll('.js-decrement');
@@ -596,50 +587,22 @@
 
 			// Update the total scores with all subtotals
 			function updateTotalScore() {
-				var positiveScorePlayer1 = 0;
-				var negativeScorePlayer1 = 0;
-				var positiveScorePlayer2 = 0;
-				var negativeScorePlayer2 = 0;
-				var positiveScorePlayer3 = 0;
-				var negativeScorePlayer3 = 0;
-				var positiveScorePlayer4 = 0;
-				var negativeScorePlayer4 = 0;
-				elemPositiveScoresPlayer1.forEach((elemPositiveScoresPlayer1) => {
-					positiveScorePlayer1 += parseInt(elemPositiveScoresPlayer1.value);
-				});
-				elemNegativeScoresPlayer1.forEach((elemNegativeScoresPlayer1) => {
-					negativeScorePlayer1 -= parseInt(elemNegativeScoresPlayer1.value);
-				});
-				elemPositiveScoresPlayer2.forEach((elemPositiveScoresPlayer2) => {
-					positiveScorePlayer2 += parseInt(elemPositiveScoresPlayer2.value);
-				});
-				elemNegativeScoresPlayer2.forEach((elemNegativeScoresPlayer2) => {
-					negativeScorePlayer2 -= parseInt(elemNegativeScoresPlayer2.value);
-				});
-				elemPositiveScoresPlayer3.forEach((elemPositiveScoresPlayer3) => {
-					positiveScorePlayer3 += parseInt(elemPositiveScoresPlayer3.value);
-				});
-				elemNegativeScoresPlayer3.forEach((elemNegativeScoresPlayer3) => {
-					negativeScorePlayer3 -= parseInt(elemNegativeScoresPlayer3.value);
-				});
-				elemPositiveScoresPlayer4.forEach((elemPositiveScoresPlayer4) => {
-					positiveScorePlayer4 += parseInt(elemPositiveScoresPlayer4.value);
-				});
-				elemNegativeScoresPlayer4.forEach((elemNegativeScoresPlayer4) => {
-					negativeScorePlayer4 -= parseInt(elemNegativeScoresPlayer4.value);
-				});
-				elemNegativeSubtotalScorePlayer1.innerHTML = negativeScorePlayer1;
-				elemPositiveSubtotalScorePlayer1.innerHTML = positiveScorePlayer1;
-				elemTotalScorePlayer1.innerHTML = negativeScorePlayer1 + positiveScorePlayer1;
-				elemNegativeSubtotalScorePlayer2.innerHTML = negativeScorePlayer2;
-				elemPositiveSubtotalScorePlayer2.innerHTML = positiveScorePlayer2;
-				elemTotalScorePlayer2.innerHTML = negativeScorePlayer2 + positiveScorePlayer2;
-				elemNegativeSubtotalScorePlayer3.innerHTML = negativeScorePlayer3;
-				elemPositiveSubtotalScorePlayer3.innerHTML = positiveScorePlayer3;
-				elemTotalScorePlayer3.innerHTML = negativeScorePlayer3 + positiveScorePlayer3;
-				elemNegativeSubtotalScorePlayer4.innerHTML = negativeScorePlayer4;
-				elemPositiveSubtotalScorePlayer4.innerHTML = positiveScorePlayer4;
-				elemTotalScorePlayer4.innerHTML = negativeScorePlayer4 + positiveScorePlayer4;
+				for (let i = 1; i < 5; i++) {
+					var positiveScore = elemPositiveScores[i];
+					var positiveSubtotal = 0;
+					var negativeSubtotal = 0;
+
+					positiveScore.forEach((positiveScore) => {
+						positiveSubtotal += parseInt(positiveScore.value);
+					});
+					var negativeScore = elemNegativeScores[i];
+					negativeScore.forEach((negativeScore) => {
+						negativeSubtotal -= parseInt(negativeScore.value);
+					});
+					elemNegativeSubtotal[i].innerHTML = negativeSubtotal;
+					elemPositiveSubtotal[i].innerHTML = positiveSubtotal;
+					elemTotalScore[i].innerHTML = negativeSubtotal + positiveSubtotal;
+				}
 			}
 
 			// Reset all scores
